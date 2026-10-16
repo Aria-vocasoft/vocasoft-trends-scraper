@@ -1,0 +1,1 @@
+# vocasoft-trends-scraper
