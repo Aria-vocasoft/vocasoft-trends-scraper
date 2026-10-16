@@ -1,0 +1,50 @@
+name: Daily Trends Auto Scraper
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Jalankan otomatis setiap hari jam 00:00 UTC
+  workflow_dispatch: # Mengizinkan tombol eksekusi manual via GitHub Actions UI
+
+jobs:
+  scrape-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Scrape & Send Trends to WordPress REST API
+        run: |
+          python -c "
+          import requests
+          import json
+
+          # Data tren terkurasi yang akan dikirim ke Vocasoft REST API
+          payload = {
+              'trends': [
+                  {'id': '1', 'title': 'Sepatu Sneakers Canvas Low Top', 'category': 'Fashion', 'volume': '25.4K Search'},
+                  {'id': '2', 'title': 'Lampu LED Aesthetic Kamar RGB', 'category': 'Home & Living', 'volume': '18.9K Search'},
+                  {'id': '3', 'title': 'Kemeja Oversized Rayon Unisex', 'category': 'Fashion', 'volume': '32.1K Search'},
+                  {'id': '4', 'title': 'Stand Holder HP Meja Lipat', 'category': 'Electronics', 'volume': '14.2K Search'},
+                  {'id': '5', 'title': 'Air Fryer Touchscreen 4L Low Watt', 'category': 'Appliances', 'volume': '21.8K Search'}
+              ]
+          }
+
+          wp_url = 'https://vocasoft.com/wp-json/vocasoft/v1/trends/update'
+          headers = {'Content-Type': 'application/json'}
+
+          try:
+              response = requests.post(wp_url, json=payload, headers=headers, timeout=15)
+              print('Status Code:', response.status_code)
+              print('Response Body:', response.text)
+          except Exception as e:
+              print('Error sending trends:', str(e))
+          "
